@@ -23,7 +23,7 @@ class ArchiverClient:
     Example:
         >>> from archivertools import ArchiverClient
         >>> client = ArchiverClient(
-        ...     archiver_url="http://your-server:17665",
+        ...     archiver_url="http://your-archiver-server",
         ...     epics_timezone='US/Pacific',
         ...     check_connection=True
         ... )
