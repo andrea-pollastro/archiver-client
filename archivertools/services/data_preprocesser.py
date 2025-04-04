@@ -10,14 +10,10 @@ class DataPreprocesser:
     This class provides methods for cleaning and matching data from multiple PVs,
     including missing value imputation and timestamp alignment.
 
-    Attributes:
-        SEP (str): Separator string for console output formatting.
-
     Note:
         The preprocessing steps ensure data consistency and proper alignment
         across multiple PVs with potentially different archiving policies.
     """
-    SEP = '==================================='
     
     def clean_data(self, pv: PV, precision: int) -> PV:
         """Clean and impute missing values in PV data.
