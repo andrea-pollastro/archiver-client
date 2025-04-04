@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="epics-archiver-tools",
-    version="1.0.6",
+    version="1.0.7",
     author="Andrea Pollastro",
     author_email="apollastro@lbl.gov",
     description="A Python package for interacting with EPICS archiver data",
