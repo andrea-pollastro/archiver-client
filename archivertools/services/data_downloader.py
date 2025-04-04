@@ -9,6 +9,7 @@ import json
 import warnings
 import numpy as np
 import pandas as pd
+from urllib.parse import urlparse
 
 
 class DataDownloader:
@@ -29,16 +30,24 @@ class DataDownloader:
     - __pv_properties: it downloads the pv properties.
     - download_data: it downloads data from a URL.
     """
-    def __init__(self):
-        self.__ARCHIVER_URL: str = 'https://controls-web.als.lbl.gov'
+    def __init__(self, archiver_url: str = None, check_connection: bool = True):
+        """
+        Initialize the DataDownloader.
+
+        Args:
+            archiver_url (str, optional): The URL of the archiver server. If None, defaults to a generic URL.
+            check_connection (bool, optional): Whether to check the connection to the archiver server on initialization.
+        """
+        self.__ARCHIVER_URL: str = archiver_url or 'http://localhost:17665'  # Default to localhost
         self.__DATA_JSON: str = '/archappl_retrieve/data/getData.json?'
         self.__CHANNEL_FINDER: str = '/ChannelFinder/resources/channels?'
         self.__SEP = '==================================='
 
-        is_reachable = self.__ping_archiver()
-        if is_reachable is False:
-            raise ConnectionError("Archiver server is unreachable. Hint: activate the ALS VPN and restart the application.")
-        print('Archiver server is reachable via ping.')
+        if check_connection:
+            is_reachable = self.__ping_archiver()
+            if is_reachable is False:
+                raise ConnectionError("Archiver server is unreachable. Please check your connection and server URL.")
+            print('Archiver server is reachable via ping.')
     
     @property
     def archiver_url(self) -> str:
@@ -49,10 +58,14 @@ class DataDownloader:
         self.__ARCHIVER_URL = archiver_url
         
     def __ping_archiver(self) -> bool:
-        """This function verifies if the archiver's server is reachable via ping. It is called only in the constructor"""
+        """This function verifies if the archiver's server is reachable via ping."""
         print(self.__SEP)
         print("Verifying the reachability of the archiver's server...")
-        exit_status: int = os.system("ping -c 1 controls-web.als.lbl.gov")
+        # Extract hostname from URL
+        hostname = urlparse(self.__ARCHIVER_URL).netloc
+        if not hostname:
+            hostname = self.__ARCHIVER_URL
+        exit_status: int = os.system(f"ping -c 1 {hostname}")
         print(self.__SEP)
         return exit_status == 0
 

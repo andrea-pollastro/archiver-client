@@ -1,9 +1,14 @@
 # ArchiverTools
 
-Using this tool you can easily interact with the archiver server through your Python code. 
-Using this library you can easily download raw data starting from a PV name, impute missing values and match data of multiple PVs for a defined timespan.
+A Python library for interacting with EPICS archiver data. This tool allows you to easily download, process, and analyze data from EPICS archiver servers.
 
-Note: to use this library (in particular, to download new data) you need to be connected on the lbl network (you might need the VPN if some connection exception are raised).
+## Features
+
+- Download raw data from PVs (Process Variables)
+- Impute missing values
+- Match data from multiple PVs for defined timespans
+- Configurable archiver server URL
+- Optional connection checking
 
 ## Installation
 
@@ -20,15 +25,17 @@ pip install .
 Interactions with the archiver are managed by the `ArchiverClient` class. Let's see some examples.
 
 ### Single PV data downloading
-To download the data of a given pv, refer to the `.download_data()` function:
+To download the data of a given PV, refer to the `.download_data()` function:
 
 ``` python
 from datetime import datetime
 from archivertools import ArchiverClient
 
-archiver_client = ArchiverClient()
+# Initialize the client with your archiver server URL
+archiver_client = ArchiverClient(archiver_url="http://your-archiver-server")
+
 pv = archiver_client.download_data(
-    pv_name='SR04C___QFA____AM00',
+    pv_name='YOUR_PV_NAME',
     precision=100, # this defines the precision of your signal in ms (bounded by the archiving policy)
     start=datetime(year=2023, month=4, day=25, hour=22),
     end=datetime(year=2023, month=4, day=25, hour=23),
@@ -54,7 +61,7 @@ Data matching can be done using the `.match_data()` function:
 
 ``` python
 ... # all your fancy code
-pv_list ['SR04C___QFA____AM00', 'SR04C___QFA____AC00']
+pv_list = ['PV_NAME_1', 'PV_NAME_2']
 matched_data = archiver_client.match_data(
     pv_list=pv_list,
     precision=100,
@@ -62,6 +69,21 @@ matched_data = archiver_client.match_data(
     end=datetime(year=2023, month=4, day=25, hour=23),
 )
 ``` 
+
+## Configuration
+
+The `ArchiverClient` can be configured with the following parameters:
+- `archiver_url`: The URL of your EPICS archiver server (default: "http://localhost:17665")
+- `check_connection`: Whether to verify the connection to the archiver server on initialization (default: True)
+
+Example:
+```python
+# Initialize without connection check
+client = ArchiverClient(archiver_url="http://your-server:17665", check_connection=False)
+
+# Or initialize with connection check
+client = ArchiverClient(archiver_url="http://your-server:17665", check_connection=True)
+```
 
 ## Author
 Andrea Pollastro - email: apollastro@lbl.gov, andrea.pollastro@unina.it

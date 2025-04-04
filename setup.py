@@ -4,13 +4,20 @@ with open('requirements.txt') as f:
     requirements = f.read().splitlines()
 
 setup(
-    name="archivertools", # Replace with your username
+    name="archivertools",
     version="1.0.0",
     author="Andrea Pollastro",
     author_email="apollastro@lbl.gov",
-    description="archivertools is a module to interact with the archiver server through Python.",
-    url="https://git.als.lbl.gov/physics/researchdev/archivertools",
     packages=find_packages(),
     install_requires=requirements,
-    python_requires='>=3.10',
+    description="A Python package for interacting with EPICS archiver data",
+    long_description=open("README.md").read(),
+    long_description_content_type="text/markdown",
+    url="https://github.com/andrea-pollastro/archivertools",
+    classifiers=[
+        "Programming Language :: Python :: 3",
+        "License :: OSI Approved :: MIT License",
+        "Operating System :: OS Independent",
+    ],
+    python_requires=">=3.6",
 )
