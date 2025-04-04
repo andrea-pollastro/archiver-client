@@ -84,6 +84,3 @@ client = ArchiverClient(archiver_url="http://your-server:17665", check_connectio
 # Or initialize with connection check
 client = ArchiverClient(archiver_url="http://your-server:17665", check_connection=True)
 ```
-
-## Author
-Andrea Pollastro - email: apollastro@lbl.gov, andrea.pollastro@unina.it
