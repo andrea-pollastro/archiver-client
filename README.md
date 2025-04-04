@@ -24,7 +24,6 @@ A Python library for interacting with EPICS archiver data. This tool allows you 
 - 🧩 Impute missing values
 - 🧮 Match data from multiple PVs for defined timespans
 - 🌐 Configurable archiver server URL
-- 🔄 Optional connection checking
 - 📊 Pandas DataFrame integration
 
 ## ⚙️ Installation

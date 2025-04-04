@@ -13,35 +13,36 @@ from urllib.parse import urlparse
 
 
 class DataDownloader:
-    """
-    This class manages the download and the interactions with the archiver server.
+    """Manages data download and interaction with the EPICS archiver server.
 
-    Properties (private):
-    - ARCHIVER_URL, str: URL to archiver.
-    - DATA_JSON, str: URL portion (to combine with ARCHIVER_URL) to download json data.
-    - CHANNEL_FINDER, str: URL portion (to combine with ARCHIVER_URL) to download pv properties.
-    - URL portion (to combine with ARCHIVER_URL) to download json data.
+    This class handles all communication with the EPICS archiver server, including
+    data retrieval, property fetching, and connection verification.
 
-    Methods (see function's docs for more info):
-    - __ping_archiver: it verifies if the archiver is reachable.
-    - __http_request: it does http requests to archiver.
-    - __download_data: it downloads data from a URL.
-    - __filter_data: it filters data in a given timespan.
-    - __pv_properties: it downloads the pv properties.
-    - download_data: it downloads data from a URL.
+    Attributes:
+        __ARCHIVER_URL (str): Base URL of the archiver server.
+        __DATA_JSON (str): URL path for retrieving JSON data.
+        __CHANNEL_FINDER (str): URL path for retrieving PV properties.
+
+    Note:
+        The class automatically verifies server connectivity on initialization
+        unless explicitly disabled.
     """
+
     def __init__(self, archiver_url: str = None, check_connection: bool = True):
-        """
-        Initialize the DataDownloader.
+        """Initialize the DataDownloader with optional archiver URL and connection check.
 
         Args:
-            archiver_url (str, optional): The URL of the archiver server. If None, defaults to a generic URL.
-            check_connection (bool, optional): Whether to check the connection to the archiver server on initialization.
+            archiver_url (str, optional): The URL of the archiver server. If None,
+                defaults to 'http://localhost:17665'.
+            check_connection (bool, optional): If True, verifies server connectivity
+                on initialization. Defaults to True.
+
+        Raises:
+            ConnectionError: If check_connection is True and the server is unreachable.
         """
-        self.__ARCHIVER_URL: str = archiver_url or 'http://localhost:17665'  # Default to localhost
+        self.__ARCHIVER_URL: str = archiver_url or 'http://localhost:17665'
         self.__DATA_JSON: str = '/archappl_retrieve/data/getData.json?'
         self.__CHANNEL_FINDER: str = '/ChannelFinder/resources/channels?'
-        self.__SEP = '==================================='
 
         if check_connection:
             is_reachable = self.__ping_archiver()
@@ -51,33 +52,54 @@ class DataDownloader:
     
     @property
     def archiver_url(self) -> str:
+        """Get the current archiver server URL.
+
+        Returns:
+            str: The URL of the archiver server.
+        """
         return self.__ARCHIVER_URL
     
     @archiver_url.setter
     def archiver_url(self, archiver_url) -> None:
+        """Set the archiver server URL.
+
+        Args:
+            archiver_url (str): The new URL for the archiver server.
+        """
         self.__ARCHIVER_URL = archiver_url
         
     def __ping_archiver(self) -> bool:
-        """This function verifies if the archiver's server is reachable via ping."""
-        print(self.__SEP)
+        """Verify if the archiver server is reachable via ping.
+
+        Returns:
+            bool: True if the server is reachable, False otherwise.
+
+        Note:
+            This method uses the system's ping command to verify connectivity.
+            The hostname is extracted from the archiver URL for the ping test.
+        """
+        sep = '=' * os.get_terminal_size().columns
+        print(sep)
         print("Verifying the reachability of the archiver's server...")
-        # Extract hostname from URL
         hostname = urlparse(self.__ARCHIVER_URL).netloc
         if not hostname:
             hostname = self.__ARCHIVER_URL
         exit_status: int = os.system(f"ping -c 1 {hostname}")
-        print(self.__SEP)
+        print(sep)
         return exit_status == 0
 
     def __http_request(self, url: str) -> List:
-        """
-        http request to archiver server.
+        """Perform an HTTP request to the archiver server.
 
-        params:
-        - url, str: url built on request type (ask to Tynan for more info).
+        Args:
+            url (str): The complete URL for the request.
 
-        returns:
-        - json_data, list: data retrieved from http request.
+        Returns:
+            List: The JSON response data from the server.
+
+        Note:
+            This method uses urllib3's PoolManager with certificate verification
+            disabled for the HTTP request.
         """
         http: PoolManager = PoolManager(cert_reqs='CERT_NONE')
         response = http.request('GET', url)
@@ -86,28 +108,29 @@ class DataDownloader:
         return json_data
 
     def __download_data(self, pv_name: str, 
-                            start: datetime, 
-                            end: datetime,
-                            verbose: bool = False) -> pd.DataFrame:
-        """
-        This function returns the raw data from the archiver.
+                       start: datetime, 
+                       end: datetime,
+                       verbose: bool = False) -> pd.DataFrame:
+        """Download raw data from the archiver for a specific PV.
 
-        params:
-        - pv_name, str: pv_name name
-        - start, datetime.datetime: start datetime in PST.
-        - end, datetime.datetime: end datetime in PST.
-        - verbose, bool (default, False): verbose level (default, True).
+        Args:
+            pv_name (str): Name of the Process Variable to download.
+            start (datetime): Start time for data retrieval in local timezone.
+            end (datetime): End time for data retrieval in local timezone.
+            verbose (bool, optional): If True, prints progress information.
+                Defaults to False.
 
-        returns:
-        - data, pd.DataFrame: raw data.
+        Returns:
+            pd.DataFrame: Raw data downloaded from the archiver.
+
+        Note:
+            The timestamps are automatically converted to UTC for the request.
         """
         if verbose: print(f"Downloading data from {start} to {end}")
         
-        # archiver's http requests want dates in UTC
         start = to_UTC(start, tznaive=True)
         end = to_UTC(end, tznaive=True)
 
-        # building URL
         url_components: list = [
             self.__ARCHIVER_URL,
             self.__DATA_JSON,
@@ -118,10 +141,8 @@ class DataDownloader:
         ]
         url: str = "".join(url_components)
         
-        # downloading data
         data: dict = self.__http_request(url)[0]
 
-        # organizing data as dictionary
         data_keys: list = list(data['data'][0].keys())
         if 'fields' in data_keys: 
             data_keys.remove('fields')
@@ -130,26 +151,29 @@ class DataDownloader:
         return df
     
     def __filter_data(self, df: pd.DataFrame, start_ts: int, end_ts: int) -> pd.DataFrame:
-        """
-        This function returns the dataframe filtered by a timespan defined by the timestamps in input
+        """Filter data within a specified timestamp range.
 
-        params:
-        - df, pd.DataFrame: pv data.
-        - start_ts, int: first timestamp.
-        - end_ts, int: last timestamp.
+        Args:
+            df (pd.DataFrame): PV data to filter.
+            start_ts (int): Start timestamp in seconds since epoch.
+            end_ts (int): End timestamp in seconds since epoch.
 
-        returns:
-        - df, pd.DataFrame: filterd df.
+        Returns:
+            pd.DataFrame: Filtered data containing only records within the specified range.
+
+        Note:
+            If exact timestamps are not found, the method adds records with the
+            requested timestamps using the last valid values before those times.
         """
         if start_ts not in df['secs'].values:
             record: pd.DataFrame = df[df['secs'] < start_ts].tail(1)
             record['secs'] = start_ts
-            idx: int = int(record.index[0]) + 1 # type: ignore
+            idx: int = int(record.index[0]) + 1
             df = pd.concat([df.iloc[:idx], record, df.iloc[idx:]]).reset_index(drop=True)
         if end_ts not in df['secs'].values:
             record: pd.DataFrame = df[df['secs'] < end_ts].tail(1)
             record['secs'] = end_ts
-            idx: int = (record.index[0]) + 1 # type: ignore
+            idx: int = (record.index[0]) + 1
             df = pd.concat([df.iloc[:idx], record, df.iloc[idx:]]).reset_index(drop=True)
         left_mask: pd.Series = df['secs'] >= start_ts
         right_mask: pd.Series = df['secs'] <= end_ts
@@ -157,14 +181,20 @@ class DataDownloader:
         return df
 
     def __pv_properties(self, pv: str) -> pd.DataFrame:
-        """
-        This function returns the properties of the PV in input as pandas DataFrame.
+        """Retrieve properties of a specific PV from the archiver.
 
-        params:
-        - pv, str: PV name.
+        Args:
+            pv (str): Name of the Process Variable.
 
-        returns:
-        - properties, pd.DataFrame: dataframe containing properties of the PV.
+        Returns:
+            pd.DataFrame: DataFrame containing the PV's properties.
+
+        Raises:
+            ValueError: If the PV is not found in the archiver.
+            Warning: If multiple PVs match the search criteria.
+
+        Note:
+            Only the first matching PV's properties are returned if multiple matches exist.
         """
         url_components: list = [
             self.__ARCHIVER_URL,
@@ -179,20 +209,33 @@ class DataDownloader:
         return pd.DataFrame(properties[0]['properties'])
 
     def download_data(self, pv_name: str, 
-                            start: datetime, 
-                            end: datetime,
-                            verbose: bool = False) -> PV:
-        """
-        This function returns raw data downloaded from the archiver.
+                     start: datetime, 
+                     end: datetime,
+                     verbose: bool = False) -> PV:
+        """Download and process data for a specific PV.
 
-        params:
-        - pv_name, str: pv name.
-        - start, datetime.datetime: start datetime in PST.
-        - end, datetime.datetime: end datetime in PST.
-        - verbose, bool (default, False): verbose level.
+        This method handles the complete data download process, including:
+        1. Verifying the requested time range
+        2. Downloading raw data
+        3. Filtering data to the exact requested range
+        4. Creating a PV object with the processed data
 
-        returns:
-        - pv, PV: pv data as PV object.
+        Args:
+            pv_name (str): Name of the Process Variable to download.
+            start (datetime): Start time for data retrieval in local timezone.
+            end (datetime): End time for data retrieval in local timezone.
+            verbose (bool, optional): If True, prints progress information.
+                Defaults to False.
+
+        Returns:
+            PV: A PV object containing the downloaded and processed data.
+
+        Raises:
+            AssertionError: If the start time is not before the end time.
+
+        Note:
+            The method automatically handles timezone conversions and ensures
+            the returned data exactly matches the requested time range.
         """
         start_ts: int = int(start.timestamp())
         end_ts: int = int(end.timestamp())
@@ -200,21 +243,14 @@ class DataDownloader:
         df: pd.DataFrame
         
         if verbose: 
-            print(self.__SEP)
+            sep = '=' * os.get_terminal_size().columns
+            print(sep)
             print(f"Downloading data for pv {pv_name}")
         pv_properties = self.__pv_properties(pv_name)
 
-        # Data download
         df = self.__download_data(pv_name, start, end, verbose=verbose)
-
-        # What usually happens when we download data from the archiver for the first time is that 
-        # (i) the first timestamp available is always lower than start 
-        # (ii) the last timestamp too. 
-        # For this reason, we introduce two timestamps having the values of our query equal
-        # to the last valid values before. In this way, we can return the exact timespan
         df = self.__filter_data(df, start_ts, end_ts)
 
-        # creating datetime index
         datetime_series = pd.to_datetime(df['secs'] + df['nanos']*1e-9, unit='s', utc=True).dt.tz_convert('US/Pacific')
         df = df.set_index(pd.DatetimeIndex(datetime_series, name='datetime'))
         df = df.drop(columns=['secs', 'nanos'])
@@ -222,9 +258,8 @@ class DataDownloader:
         if verbose:
             print(f'First timestamp: {df.index[0]}')
             print(f'Last timestamp: {df.index[-1]}')
-            print(self.__SEP)
+            print(sep)
 
-        # Create PV object
         pv: PV = PV(name=pv_name, raw_data=df, properties=pv_properties)
             
         return pv
