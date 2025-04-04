@@ -2,15 +2,14 @@
 
 A Python library for interacting with EPICS archiver data. This tool allows you to easily download, process, and analyze data from EPICS archiver servers.
 
-## Features
+## ✨ Features
 
-- Download raw data from PVs (Process Variables)
-- Impute missing values
-- Match data from multiple PVs for defined timespans
-- Configurable archiver server URL
-- Optional connection checking
+- 📥 Download raw data from PVs (Process Variables)
+- 🧩 Impute missing values
+- 🧮 Match data from multiple PVs for defined timespans
+- 🌐 Configurable archiver server URL
 
-## Installation
+## ⚙️ Installation
 
 To install this package, first clone or download this repository on your computer. Then, from terminal, move into the `archivertools` folder:
 ```
@@ -21,10 +20,10 @@ and install the package through `pip`:
 pip install .
 ```
 
-## Getting started
+## 🚀 Getting started
 Interactions with the archiver are managed by the `ArchiverClient` class. Let's see some examples.
 
-### Single PV data downloading
+### 📥 Single PV data downloading
 To download the data of a given PV, refer to the `.download_data()` function:
 
 ``` python
@@ -52,7 +51,7 @@ pv.first_timestamp # first timestamp of the downloaded timestamp as a datetime o
 pv.last_timestamp # last timestamp of the downloaded timestamp as a datetime object
 ```
 
-### Data matching
+### 🧮 Data matching
 For a given `list` of PVs, data can be matched according to their timestamps. The list must be a sequence of `str`.
 PVs could have different archiving policy. In order to have a matching on the timestamps, they must follow the same archiving policy (this means that all the archiving policies of the listed PVs must be reduced to a common archiving policy).
 The parameter `precision` allows to select the precision of the individual PVs to allow the data matching
@@ -70,7 +69,7 @@ matched_data = archiver_client.match_data(
 )
 ``` 
 
-## Configuration
+## 🔧 Configuration
 
 The `ArchiverClient` can be configured with the following parameters:
 - `archiver_url`: The URL of your EPICS archiver server (default: "http://localhost:17665")
@@ -85,7 +84,7 @@ client = ArchiverClient(archiver_url="http://your-server:17665", check_connectio
 client = ArchiverClient(archiver_url="http://your-server:17665", check_connection=True)
 ```
 
-## Citing
+## 📝 Citing
 This package was developed in 2023 during my stay at Berkeley, hosted by the Accelerator Physics Group (ALS, LBNL). It was used throughout the experimental phase that led to the publication <a href="https://journals.aps.org/prab/abstract/10.1103/PhysRevAccelBeams.27.074602">Application of deep learning methods for beam size control during user operation at the Advanced Light Source</a>.
 
 If you use this package in your work, please cite the following paper:
