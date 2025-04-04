@@ -84,3 +84,20 @@ client = ArchiverClient(archiver_url="http://your-server:17665", check_connectio
 # Or initialize with connection check
 client = ArchiverClient(archiver_url="http://your-server:17665", check_connection=True)
 ```
+
+## Citing
+This package was developed in 2023 during my stay at Berkeley, hosted by the Accelerator Physics Group (ALS, LBNL). It was used throughout the experimental phase that led to the publication <a href="https://journals.aps.org/prab/abstract/10.1103/PhysRevAccelBeams.27.074602">Application of deep learning methods for beam size control during user operation at the Advanced Light Source</a>.
+
+If you use this package in your work, please cite the following paper:
+```
+@article{hellert2024application,
+  title={Application of deep learning methods for beam size control during user operation at the Advanced Light Source},
+  author={Hellert, Thorsten and Ford, Tynan and Leemann, Simon C and Nishimura, Hiroshi and Venturini, Marco and Pollastro, Andrea},
+  journal={Physical Review Accelerators and Beams},
+  volume={27},
+  number={7},
+  pages={074602},
+  year={2024},
+  publisher={APS}
+}
+```
