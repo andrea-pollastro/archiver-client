@@ -44,7 +44,6 @@ class DataDownloader:
         self.__ARCHIVER_URL: str = archiver_url or 'http://localhost:17665'
         self.__DATA_JSON: str = '/archappl_retrieve/data/getData.json?'
         self.__CHANNEL_FINDER: str = '/ChannelFinder/resources/channels?'
-        self.__http = PoolManager()
 
         if check_connection:
             is_reachable = self.__ping_archiver()
