@@ -6,6 +6,7 @@ from typing import List, Union
 from tqdm import tqdm
 import pandas as pd
 import warnings
+import pytz
 
 
 class ArchiverClient:
@@ -17,10 +18,15 @@ class ArchiverClient:
     Attributes:
         __data_downloader (DataDownloader): Handles data retrieval from the archiver server.
         __data_preprocesser (DataPreprocesser): Handles data cleaning and preprocessing.
+        __epics_timezone (pytz.timezone): Timezone of the EPICS archiver server.
 
     Example:
         >>> from archivertools import ArchiverClient
-        >>> client = ArchiverClient()
+        >>> client = ArchiverClient(
+        ...     archiver_url="http://your-server:17665",
+        ...     epics_timezone='US/Pacific',
+        ...     check_connection=True
+        ... )
         >>> pv = client.download_data(
         ...     pv_name="YOUR_PV",
         ...     precision=100,
@@ -29,10 +35,27 @@ class ArchiverClient:
         ... )
     """
 
-    def __init__(self):
-        """Initialize the ArchiverClient with data downloader and preprocessor."""
-        self.__data_downloader = DataDownloader()
+    def __init__(self, archiver_url: str = None, epics_timezone: str = None, check_connection: bool = True):
+        """Initialize the ArchiverClient with data downloader and preprocessor.
+
+        Args:
+            archiver_url (str, optional): The URL of the archiver server. If None,
+                defaults to 'http://localhost:17665'.
+            epics_timezone (str, optional): The timezone of the EPICS archiver server.
+                If None, defaults to UTC.
+            check_connection (bool, optional): If True, verifies server connectivity
+                on initialization. Defaults to True.
+
+        Raises:
+            ConnectionError: If check_connection is True and the server is unreachable.
+
+        Note:
+            It's recommended to explicitly specify the EPICS server timezone to avoid confusion.
+            For example, when accessing a US accelerator: epics_timezone='US/Pacific'
+        """
+        self.__data_downloader = DataDownloader(archiver_url=archiver_url, check_connection=check_connection)
         self.__data_preprocesser = DataPreprocesser()
+        self.__epics_timezone = pytz.timezone(epics_timezone) if epics_timezone else pytz.UTC
 
     def download_data(self, pv_name: str,
                      precision: int,
@@ -45,22 +68,27 @@ class ArchiverClient:
             pv_name (str): Name of the Process Variable to download.
             precision (int): Data sampling rate in milliseconds. This defines the precision
                 of the signal and must be compatible with the PV's archiving policy.
-            start (datetime): Start time for data retrieval in local timezone.
-            end (datetime): End time for data retrieval in local timezone.
+            start (datetime): Start time for data retrieval.
+            end (datetime): End time for data retrieval.
             verbose (bool, optional): If True, prints progress information. Defaults to False.
 
         Returns:
             PV: A PV object containing the downloaded and preprocessed data.
 
-        Example:
-            >>> from datetime import datetime
-            >>> pv = client.download_data(
-            ...     pv_name="SR04C___QFA____AM00",
-            ...     precision=100,
-            ...     start=datetime(2023, 4, 25, 22),
-            ...     end=datetime(2023, 4, 25, 23)
-            ... )
+        Note:
+            The input timestamps are automatically converted to the EPICS server timezone
+            for the request.
         """
+        # Convert input timestamps to EPICS timezone if they're naive
+        if start.tzinfo is None:
+            start = self.__epics_timezone.localize(start)
+        if end.tzinfo is None:
+            end = self.__epics_timezone.localize(end)
+        
+        # Convert to EPICS timezone if they're in a different timezone
+        start = start.astimezone(self.__epics_timezone)
+        end = end.astimezone(self.__epics_timezone)
+
         pv: PV = self.__data_downloader.download_data(
             pv_name, start, end, verbose
         )
@@ -100,22 +128,13 @@ class ArchiverClient:
         Args:
             pv_list (List[str]): List of PV names to download and match.
             precision (int): Common precision to use for all PVs in milliseconds.
-            start (datetime): Start time for data retrieval in local timezone.
-            end (datetime): End time for data retrieval in local timezone.
+            start (datetime): Start time for data retrieval.
+            end (datetime): End time for data retrieval.
             verbose (int, optional): Verbosity level (0: silent, 1: progress, 2: detailed).
                 Defaults to 0.
 
         Returns:
             pd.DataFrame: A DataFrame containing the matched data from all PVs.
-
-        Example:
-            >>> pv_list = ["PV1", "PV2", "PV3"]
-            >>> matched_data = client.match_data(
-            ...     pv_list=pv_list,
-            ...     precision=100,
-            ...     start=datetime(2023, 4, 25, 22),
-            ...     end=datetime(2023, 4, 25, 23)
-            ... )
 
         Note:
             All PVs must have compatible archiving policies for successful matching.
@@ -124,6 +143,8 @@ class ArchiverClient:
             The archiving policy of each PV must be compatible with the specified precision.
             For example, if a PV is archived every 100ms, using a precision of 50ms will result in missing data.
             It's recommended to check the archiving policy of each PV before matching to ensure data consistency.
+            The input timestamps are automatically converted to the EPICS server timezone
+            for the request.
         """
         assert all(filter(lambda x: isinstance(x, str), pv_list)), 'please use only lists of strings.'
         verbose_download = verbose == 2

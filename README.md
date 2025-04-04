@@ -23,7 +23,7 @@ A Python library for interacting with EPICS archiver data. This tool allows you 
 - 📥 Download raw data from Process Variables (PVs)
 - 🧩 Impute missing values
 - 🧮 Match data from multiple PVs for defined timespans
-- 🌐 Configurable archiver server URL
+- 🌐 Configurable archiver server URL and timezone
 - 📊 Pandas DataFrame integration
 
 ## ⚙️ Installation
@@ -64,10 +64,13 @@ To download the data of a given PV, refer to the `.download_data()` function:
 from datetime import datetime
 from archivertools import ArchiverClient
 
-# Initialize the client with your archiver server URL
-archiver_client = ArchiverClient(archiver_url="http://your-archiver-server")
+# Initialize the client with your archiver server URL and timezone
+client = ArchiverClient(
+    archiver_url="http://your-archiver-server",
+    epics_timezone='US/Pacific'
+)
 
-pv = archiver_client.download_data(
+pv = client.download_data(
     pv_name='YOUR_PV_NAME',
     precision=100,  # this defines the precision of your signal in ms
     start=datetime(year=2023, month=4, day=25, hour=22),
@@ -95,7 +98,7 @@ policy). The parameter `precision` allows to select the precision of the individ
 Example:
 ```python
 pv_list = ['PV_NAME_1', 'PV_NAME_2']
-matched_data = archiver_client.match_data(
+matched_data = client.match_data(
     pv_list=pv_list,
     precision=100,
     start=datetime(year=2023, month=4, day=25, hour=22),
@@ -107,16 +110,23 @@ matched_data = archiver_client.match_data(
 
 The `ArchiverClient` can be configured with:
 - `archiver_url`: The URL of your EPICS archiver server (default: "http://localhost:17665")
+- `epics_timezone`: The timezone of your EPICS archiver server (default: UTC)
 - `check_connection`: Whether to verify the connection on initialization (default: True)
 
 Example:
 ```python
 # Initialize without connection check
-client = ArchiverClient(archiver_url="http://your-server:17665", check_connection=False)
-
-# Or initialize with connection check
-client = ArchiverClient(archiver_url="http://your-server:17665", check_connection=True)
+client = ArchiverClient(
+    archiver_url="http://your-archiver-server",
+    epics_timezone='US/Pacific',
+    check_connection=True
+)
 ```
+
+Note:
+- The `epics_timezone` parameter should match the timezone of your EPICS archiver server
+- Input timestamps are automatically converted to the EPICS server timezone
+- All returned data will be in the EPICS server timezone
 
 ## 🤝 Contributing
 
@@ -146,4 +156,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 💬 Support
 
-For support, please open an issue in the [GitHub repository](https://github.com/andrea-pollastro/epics-archiver-tools).
+For support, please open an issue in the [GitHub repository](https://github.com/andrea-pollastro/epics-archiver-tools) or contact the author at apollastro@lbl.gov.

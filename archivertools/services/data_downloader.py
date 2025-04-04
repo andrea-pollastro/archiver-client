@@ -1,4 +1,3 @@
-from ..utils import to_UTC
 from urllib3 import PoolManager, disable_warnings
 disable_warnings()
 from datetime import datetime
@@ -10,6 +9,7 @@ import warnings
 import numpy as np
 import pandas as pd
 from urllib.parse import urlparse
+import pytz
 
 
 class DataDownloader:
@@ -22,14 +22,15 @@ class DataDownloader:
         __ARCHIVER_URL (str): Base URL of the archiver server.
         __DATA_JSON (str): URL path for retrieving JSON data.
         __CHANNEL_FINDER (str): URL path for retrieving PV properties.
+        __epics_timezone (pytz.timezone): Timezone of the EPICS archiver server.
 
     Note:
         The class automatically verifies server connectivity on initialization
         unless explicitly disabled.
     """
-
+    
     def __init__(self, archiver_url: str = None, check_connection: bool = True):
-        """Initialize the DataDownloader with optional archiver URL and connection check.
+        """Initialize the DataDownloader with server configuration.
 
         Args:
             archiver_url (str, optional): The URL of the archiver server. If None,
@@ -43,31 +44,14 @@ class DataDownloader:
         self.__ARCHIVER_URL: str = archiver_url or 'http://localhost:17665'
         self.__DATA_JSON: str = '/archappl_retrieve/data/getData.json?'
         self.__CHANNEL_FINDER: str = '/ChannelFinder/resources/channels?'
+        self.__http = PoolManager()
 
         if check_connection:
             is_reachable = self.__ping_archiver()
             if is_reachable is False:
                 raise ConnectionError("Archiver server is unreachable. Please check your connection and server URL.")
             print('Archiver server is reachable via ping.')
-    
-    @property
-    def archiver_url(self) -> str:
-        """Get the current archiver server URL.
 
-        Returns:
-            str: The URL of the archiver server.
-        """
-        return self.__ARCHIVER_URL
-    
-    @archiver_url.setter
-    def archiver_url(self, archiver_url) -> None:
-        """Set the archiver server URL.
-
-        Args:
-            archiver_url (str): The new URL for the archiver server.
-        """
-        self.__ARCHIVER_URL = archiver_url
-        
     def __ping_archiver(self) -> bool:
         """Verify if the archiver server is reachable via ping.
 
@@ -115,8 +99,8 @@ class DataDownloader:
 
         Args:
             pv_name (str): Name of the Process Variable to download.
-            start (datetime): Start time for data retrieval in local timezone.
-            end (datetime): End time for data retrieval in local timezone.
+            start (datetime): Start time for data retrieval in EPICS timezone.
+            end (datetime): End time for data retrieval in EPICS timezone.
             verbose (bool, optional): If True, prints progress information.
                 Defaults to False.
 
@@ -128,15 +112,16 @@ class DataDownloader:
         """
         if verbose: print(f"Downloading data from {start} to {end}")
         
-        start = to_UTC(start, tznaive=True)
-        end = to_UTC(end, tznaive=True)
+        # Convert to UTC for the request
+        start_utc = start.astimezone(pytz.UTC)
+        end_utc = end.astimezone(pytz.UTC)
 
         url_components: list = [
             self.__ARCHIVER_URL,
             self.__DATA_JSON,
             f'pv={pv_name}&',
-            f'from={start.isoformat()}Z&'
-            f'to={end.isoformat()}Z&',
+            f'from={start_utc.isoformat()}Z&'
+            f'to={end_utc.isoformat()}Z&',
             'fetchLatestMetadata=true',
         ]
         url: str = "".join(url_components)
@@ -222,8 +207,8 @@ class DataDownloader:
 
         Args:
             pv_name (str): Name of the Process Variable to download.
-            start (datetime): Start time for data retrieval in local timezone.
-            end (datetime): End time for data retrieval in local timezone.
+            start (datetime): Start time for data retrieval in EPICS timezone.
+            end (datetime): End time for data retrieval in EPICS timezone.
             verbose (bool, optional): If True, prints progress information.
                 Defaults to False.
 
@@ -251,7 +236,9 @@ class DataDownloader:
         df = self.__download_data(pv_name, start, end, verbose=verbose)
         df = self.__filter_data(df, start_ts, end_ts)
 
-        datetime_series = pd.to_datetime(df['secs'] + df['nanos']*1e-9, unit='s', utc=True).dt.tz_convert('US/Pacific')
+        # Convert timestamps to EPICS timezone
+        datetime_series = pd.to_datetime(df['secs'] + df['nanos']*1e-9, unit='s', utc=True)
+        datetime_series = datetime_series.dt.tz_convert(start.tzinfo)
         df = df.set_index(pd.DatetimeIndex(datetime_series, name='datetime'))
         df = df.drop(columns=['secs', 'nanos'])
 
