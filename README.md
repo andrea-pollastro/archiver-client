@@ -4,7 +4,7 @@ A Python library for interacting with EPICS archiver data. This tool allows you 
 
 ## ✨ Features
 
-- 📥 Download raw data from PVs (Process Variables)
+- 📥 Download raw data from Process Variables (PVs)
 - 🧩 Impute missing values
 - 🧮 Match data from multiple PVs for defined timespans
 - 🌐 Configurable archiver server URL
