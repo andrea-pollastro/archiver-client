@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="epics-archiver-tools",
-    version="1.0.0",
+    version="1.0.4",
     author="Andrea Pollastro",
     author_email="apollastro@lbl.gov",
     description="A Python package for interacting with EPICS archiver data",
@@ -24,15 +24,13 @@ setup(
         "tqdm>=4.65.0",
     ],
     classifiers=[
-        "Development Status :: 4 - Beta",
-        "Intended Audience :: Science/Research",
+        "Intended Audience :: Engineering/Research",
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
-        "Topic :: Scientific/Engineering",
     ],
     python_requires=">=3.10",
-    keywords="epics, archiver, data, science, research",
+    keywords="epics, archiver, data-mining, engineering, research, particle-accelerator",
 )

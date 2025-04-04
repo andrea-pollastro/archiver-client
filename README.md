@@ -11,13 +11,9 @@ A Python library for interacting with EPICS archiver data. This tool allows you 
 
 ## ⚙️ Installation
 
-To install this package, first clone or download this repository on your computer. Then, from terminal, move into the `archivertools` folder:
+You can install this package through `pip`:
 ```
-cd archivertools
-```
-and install the package through `pip`:
-```
-pip install .
+pip install epics-archiver-tools
 ```
 
 ## 🚀 Getting started
