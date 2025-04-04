@@ -146,4 +146,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 💬 Support
 
-For support, please open an issue in the [GitHub repository](https://github.com/andrea-pollastro/epics-archiver-tools) or contact the author at apollastro@lbl.gov.
+For support, please open an issue in the [GitHub repository](https://github.com/andrea-pollastro/epics-archiver-tools).
