@@ -37,7 +37,7 @@ pip install epics-archiver-tools
 ### From source
 If you want to install from source:
 ```bash
-git clone https://github.com/yourusername/archivertools.git
+git clone https://github.com/andrea-pollastro/epics-archiver-tools.git
 cd archivertools
 pip install -e .
 ```
@@ -146,4 +146,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 💬 Support
 
-For support, please open an issue in the [GitHub repository](https://github.com/yourusername/archivertools) or contact the author at apollastro@lbl.gov.
+For support, please open an issue in the [GitHub repository](https://github.com/andrea-pollastro/epics-archiver-tools) or contact the author at apollastro@lbl.gov.

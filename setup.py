@@ -5,13 +5,13 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="epics-archiver-tools",
-    version="1.0.4",
+    version="1.0.5",
     author="Andrea Pollastro",
     author_email="apollastro@lbl.gov",
     description="A Python package for interacting with EPICS archiver data",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/andrea-pollastro/archivertools",
+    url="https://github.com/andrea-pollastro/epics-archiver-tools",
     packages=find_packages(),
     install_requires=[
         "numpy>=1.26.3",
