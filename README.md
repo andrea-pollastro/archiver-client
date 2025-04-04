@@ -63,13 +63,5 @@ matched_data = archiver_client.match_data(
 )
 ``` 
 
-## Roadmap
-Until now, only data management (downloading, preprocessing and some transformation) is implemented. The next update will cover the data plotting (Dashboards).
-
 ## Author
-Andrea Pollastro - email: apollastro@lbl.gov
-
-## Contributing
-If you find any bug or if you have any suggestion on functionalities or improvement of this library, please feel free to write me. :)
-
-Any contribution is much appreciated.
+Andrea Pollastro - email: apollastro@lbl.gov, andrea.pollastro@unina.it
