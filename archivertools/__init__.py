@@ -20,6 +20,5 @@ __all__ = [
     'pv',
 ]
 
-__version__ = '1.0.4'
 __author__ = 'Andrea Pollastro'
 __author_email__ = 'apollastro@lbl.gov'
