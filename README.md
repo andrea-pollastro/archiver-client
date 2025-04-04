@@ -1,6 +1,6 @@
 # EPICS Archiver Tools
 
-A Python library for interacting with EPICS archiver data. This tool allows you to easily download, process, and analyze data from EPICS archiver servers.
+A Python library for interacting with EPICS archiver data. This tool allows you to easily download and process data from EPICS archiver servers.
 
 ## ✨ Features
 
